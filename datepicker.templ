@@ -1,0 +1,72 @@
+package main
+
+import (
+	"fmt"
+	"thiago/picker/signals"
+)
+
+templ Page(body templ.Component) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+			<title>Datepicker woal</title>
+			<script type="module">
+				import * as Utils from "/utils.js"
+
+				window.Utils = Utils
+			</script>
+			<script type="module" src="/datastar.js"> </script>
+			<script type="module">
+				import { root } from "/datastar.js"
+
+				window.datastarRoot = root
+			</script>
+			<link rel="stylesheet" href="layout.css"/>
+			<link rel="stylesheet" href="style.css"/>
+		</head>
+		<body>
+			@body
+			<hr/>
+			<pre data-json-signals></pre>
+		</body>
+	</html>
+}
+
+templ InputDate(id string, ranged bool) {
+	{{ s := signals.New("datepickers", id) }}
+	<input
+		type="text"
+		data-bind={ s.Bind("begin") }
+		data-on:input={ fmt.Sprintf("Utils.applyDateMask(evt); %v = el.value", s.Get("begin")) }
+	/>
+	if (ranged) {
+		<input
+			type="text"
+			data-bind={ s.Bind("end") }
+			data-on:input={ fmt.Sprintf("Utils.applyDateMask(evt); %v = el.value", s.Get("end")) }
+		/>
+	}
+	<div
+		id={ id }
+		data-init={ fmt.Sprintf("Utils.createDatepicker('%s', {})", id) }
+	></div>
+}
+
+// templ Datepicker(id string) {
+// 	@InputDate(id)
+// 	<div>
+// 		id="datepicker-root"
+// 	</div>
+// 	// @Popover(Calendar(id))
+// }
+
+// // templ Popover(content templ.Component) {
+// // 	@content
+// // }
+// templ Calendar(id string, ranged bool) {
+// 	if ranged {
+// 	}
+// }

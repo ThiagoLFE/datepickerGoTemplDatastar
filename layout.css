@@ -1,0 +1,66 @@
+:root {
+    --datepicker-gap: 4px;
+    --datepicker-radius: 2px;
+    --datepicker-padding: 1.5rem;
+    --datepicker-border-width: 1px;
+
+    --datepicker-bg: #1e1e1e;
+    --datepicker-fg: beige;
+    --datepicker-border: gray;
+
+    --datepicker-hover-bg: #444444;
+
+    --datepicker-disabled-fg: #898989;
+
+    --datepicker-selected-bg: #4a90d9;
+    --datepicker-selected-fg: #fff;
+
+    --datepicker-range-bg: #1e3a5f;
+    --datepicker-range-fg: #c8dff5;
+    --datepicker-range-border: #2a5080;
+}
+
+.datepicker {
+    display: flex;
+    flex-direction: column;
+    gap: var(--datepicker-gap);
+}
+
+.datepicker-double {
+    width: fit-content;
+}
+
+.datepicker-months {
+    display: flex;
+    gap: calc(4 * var(--datepicker-gap));
+}
+
+.datepicker-header {
+    display: flex;
+    width: 100%;
+    align-items: center;
+}
+
+.datepicker-header span {
+    flex: 1;
+    text-align: center;
+}
+
+.datepicker-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-auto-rows: 1fr;
+    gap: var(--datepicker-gap);
+}
+
+.datepicker-grid button {
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    border-radius: var(--datepicker-radius);
+    padding: calc(0.25 * var(--datepicker-padding));
+}
+
+.datepicker-header-nav {
+    aspect-ratio: 1 / 1;
+    border-radius: var(--datepicker-radius);
+}
