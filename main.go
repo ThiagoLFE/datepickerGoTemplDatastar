@@ -21,5 +21,5 @@ func main() {
 }
 
 func RenderDatepicker(w http.ResponseWriter, req *http.Request) {
-	Page(InputDate("calendario", true)).Render(req.Context(), w)
+	Page(InputDate("calendario")).Render(req.Context(), w)
 }

@@ -323,6 +323,63 @@ export class Datepicker {
         return this;
     }
 }
+// =========================== InputDate =================================
+export class InputDate {
+    inputRaw;
+    inputMask;
+    dataValue;
+    inputElement;
+    constructor(target, inputMask = "") {
+        this.inputElement = target;
+        // Verificando se vai ser iniciado com valor ou nulo;
+        const parts = this.splitBrazileanMask(inputMask);
+        if (parts.length != 3) {
+            this.inputRaw = "";
+            this.inputMask = "";
+            this.dataValue = null;
+        }
+        else {
+            this.inputRaw = this.onlyNumbers(this.limitNumbersLength(inputMask));
+            this.inputMask = inputMask;
+            this.dataValue = this.dateBrazileanToDateOnly(inputMask);
+        }
+    }
+    onlyNumbers(brazileanInputMask) {
+        return brazileanInputMask.replace(/\D/g, "");
+    }
+    dateBrazileanToDateOnly(dateBrazilean) {
+        let parts = this.splitBrazileanMask(dateBrazilean);
+        if (parts.length != 3) {
+            return null;
+        }
+        const day = Number.parseInt(parts[0]);
+        const month = Number.parseInt(parts[1]) - 1;
+        const year = Number.parseInt(parts[2]);
+        if (year < 1000) {
+            return null;
+        }
+        return new DateOnly(year, month, day);
+    }
+    limitNumbersLength(inputRaw) {
+        return inputRaw.slice(0, 10);
+    }
+    splitBrazileanMask(brazileanDate) {
+        return brazileanDate.split("/");
+    }
+    applyBrazileanMask(value) {
+        const digits = this.limitNumbersLength(this.onlyNumbers(value));
+        if (digits.length <= 2)
+            return digits;
+        if (digits.length < 5)
+            return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+        return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
+    }
+    update() {
+        this.inputMask = this.applyBrazileanMask(this.inputRaw);
+        this.dataValue = this.dateBrazileanToDateOnly(this.inputMask);
+        // Aqui em baixo vamos sincronizar os signals
+    }
+}
 /*
     MIT No Attribution
 

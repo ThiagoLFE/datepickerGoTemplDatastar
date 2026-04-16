@@ -1,9 +1,6 @@
 package main
 
-import (
-	"fmt"
-	"thiago/picker/signals"
-)
+import "thiago/picker/signals"
 
 templ Page(body templ.Component) {
 	<!DOCTYPE html>
@@ -35,24 +32,36 @@ templ Page(body templ.Component) {
 	</html>
 }
 
-templ InputDate(id string, ranged bool) {
-	{{ s := signals.New("datepickers", id) }}
-	<input
-		type="text"
-		data-bind={ s.Bind("begin") }
-		data-on:input={ fmt.Sprintf("Utils.applyDateMask(evt); %v = el.value", s.Get("begin")) }
-	/>
-	if (ranged) {
-		<input
-			type="text"
-			data-bind={ s.Bind("end") }
-			data-on:input={ fmt.Sprintf("Utils.applyDateMask(evt); %v = el.value", s.Get("end")) }
-		/>
-	}
+templ InputDate(id string) {
+	// {{ s := signals.New("datepickers", id) }}
+	// <input
+	// 	type="text"
+	// 	data-bind={ s.Bind("begin") }
+	// 	data-on:input={ fmt.Sprintf("Utils.applyDateMask(evt); %v = el.value", s.Get("begin")) }
+	// />
+	// if (ranged) {
+	// 	<input
+	// 		type="text"
+	// 		data-bind={ s.Bind("end") }
+	// 		data-on:input={ fmt.Sprintf("Utils.applyDateMask(evt); %v = el.value", s.Get("end")) }
+	// 	/>
+	// }
+	// <div
+	// 	id={ id }
+	// 	data-init={ fmt.Sprintf("Utils.createDatepicker('%s', {})", id) }
+	// ></div>
+	{{ s := signals.New("inputdates", id) }}
 	<div
-		id={ id }
-		data-init={ fmt.Sprintf("Utils.createDatepicker('%s', {})", id) }
-	></div>
+		data-signals={ s.Init(map[string]any{
+		"input_value": "",
+	}) }
+	>
+		<input
+			id={ id }
+			data-bind={ s.Bind("input_value") }
+			data-init={ s.Scope("Utils.createInputDate(#id, #s.input_value)", "id", id) }
+		/>
+	</div>
 }
 
 // templ Datepicker(id string) {

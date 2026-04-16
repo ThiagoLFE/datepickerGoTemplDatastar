@@ -1,5 +1,6 @@
 import {
     Datepicker,
+    InputDate,
     toBrazileanDateFormat,
     brazileanToDateOnly,
 } from "/datepicker.js";
@@ -7,6 +8,34 @@ import {
 import { root } from "/datastar.js";
 
 export let datepickers = {};
+export let inputdates = {};
+
+export function createInputDate(id, maskValue = "") {
+    const target = document.getElementById(id);
+    if (!target) {
+        throw new Error(`nao achei ${id}`);
+    }
+
+    const input = new InputDate(target, maskValue);
+
+    inputdates[id] = input;
+
+    input.inputElement.addEventListener("input", (evt) => {
+        input.inputRaw = evt.target.value;
+    });
+
+    // atualizando os signals conforme dados do input
+
+    input.inputElement.addEventListener("change", () => {
+        input.update();
+        console.log("===================================");
+        console.log(input);
+        console.log("===================================");
+        root.inputdates[id].input_value = input.inputMask;
+    });
+
+    return input;
+}
 
 export function createDatepicker(id, options = {}) {
     const target = document.getElementById(id);

@@ -412,6 +412,78 @@ export class Datepicker {
     }
 }
 
+// =========================== InputDate =================================
+
+export class InputDate {
+    inputRaw: string;
+    inputMask: string;
+    dataValue: DateOnly | null;
+    inputElement: HTMLInputElement;
+
+    constructor(target: HTMLInputElement, inputMask = "") {
+        this.inputElement = target;
+        // Verificando se vai ser iniciado com valor ou nulo;
+        const parts = this.splitBrazileanMask(inputMask);
+
+        if (parts.length != 3) {
+            this.inputRaw = "";
+            this.inputMask = "";
+            this.dataValue = null;
+        } else {
+            this.inputRaw = this.onlyNumbers(
+                this.limitNumbersLength(inputMask),
+            );
+            this.inputMask = inputMask;
+            this.dataValue = this.dateBrazileanToDateOnly(inputMask);
+        }
+    }
+
+    onlyNumbers(brazileanInputMask: string): string {
+        return brazileanInputMask.replace(/\D/g, "");
+    }
+
+    dateBrazileanToDateOnly(dateBrazilean: string) {
+        let parts: string[] = this.splitBrazileanMask(dateBrazilean);
+
+        if (parts.length != 3) {
+            return null;
+        }
+
+        const day: number = Number.parseInt(parts[0]);
+        const month: number = Number.parseInt(parts[1]) - 1;
+        const year: number = Number.parseInt(parts[2]);
+
+        if (year < 1000) {
+            return null;
+        }
+
+        return new DateOnly(year, month, day);
+    }
+    limitNumbersLength(inputRaw: string) {
+        return inputRaw.slice(0, 10);
+    }
+
+    splitBrazileanMask(brazileanDate: string) {
+        return brazileanDate.split("/");
+    }
+
+    applyBrazileanMask(value: string): string {
+        const digits = this.limitNumbersLength(this.onlyNumbers(value));
+
+        if (digits.length <= 2) return digits;
+        if (digits.length < 5)
+            return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+
+        return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
+    }
+
+    update(): void {
+        this.inputMask = this.applyBrazileanMask(this.inputRaw);
+        this.dataValue = this.dateBrazileanToDateOnly(this.inputMask);
+        // Aqui em baixo vamos sincronizar os signals
+    }
+}
+
 /*
 	MIT No Attribution
 
