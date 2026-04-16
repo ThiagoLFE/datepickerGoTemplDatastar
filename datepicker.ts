@@ -27,6 +27,10 @@ export class DateOnly {
         this._date = new Date(Date.UTC(year, month, day));
     }
 
+    static now(): DateOnly {
+        return DateOnly.fromDate(new Date());
+    }
+
     static fromDate(d: Date): DateOnly {
         return new DateOnly(
             d.getUTCFullYear(),
@@ -100,7 +104,7 @@ type DatepickerConfig = {
     endDate?: DateOnly;
     minDate?: DateOnly;
     maxDate?: DateOnly;
-    toDisplay?: (date: DateOnly) => string;
+    toDisplay?: (date?: DateOnly) => string;
     fromDisplay?: (displayDate: string) => DateOnly;
     onSelect?:
         | ((self: Datepicker, date?: DateOnly) => any)
@@ -111,10 +115,8 @@ export class Datepicker {
     year: number;
     month: number;
 
-    startDateDisplay: string;
     startDateValue: DateOnly | null;
 
-    endDateDisplay: string;
     endDateValue: DateOnly | null;
 
     onSelect?: (self: Datepicker, begin: DateOnly, end?: DateOnly) => any;
@@ -139,14 +141,7 @@ export class Datepicker {
         this.toDisplay = config.toDisplay ?? Datepicker.toISO8601;
 
         this.startDateValue = config.startDate ?? null;
-        this.startDateDisplay = this.startDateValue
-            ? this.toDisplay(this.startDateValue)
-            : "";
-
         this.endDateValue = config.endDate ?? null;
-        this.endDateDisplay = this.endDateValue
-            ? this.toDisplay(this.endDateValue)
-            : "";
 
         this.ranged = config.ranged ?? false;
         this.double = config.ranged ?? false;
@@ -194,6 +189,16 @@ export class Datepicker {
             this.endDateValue = null;
         }
         this._render();
+    }
+
+    get startDateDisplay(): string {
+        if (!this.startDateValue) return "";
+        return this.toDisplay(this.startDateValue);
+    }
+
+    get endDateDisplay(): string {
+        if (!this.startDateValue) return "";
+        return this.toDisplay(this.endDateValue);
     }
 
     _handleClick(date: DateOnly): void {
@@ -415,73 +420,89 @@ export class Datepicker {
 // =========================== InputDate =================================
 
 export class InputDate {
-    inputRaw: string;
-    inputMask: string;
-    dataValue: DateOnly | null;
+    _inputRaw: string;
+    _inputMask: string;
+    _value: DateOnly | null;
+
     inputElement: HTMLInputElement;
+    onChange: (self: InputDate, value: DateOnly | null) => any;
 
-    constructor(target: HTMLInputElement, inputMask = "") {
+    constructor(options?: {
+        initialValue?: DateOnly;
+        onChange?: (self: InputDate, value: DateOnly | null) => any;
+    }) {
+        options = options ?? {};
         this.inputElement = target;
+        options.initialValue ??= DateOnly.now();
+
         // Verificando se vai ser iniciado com valor ou nulo;
-        const parts = this.splitBrazileanMask(inputMask);
+        const parts = splitBrazileanMask(options.initialValue);
 
         if (parts.length != 3) {
-            this.inputRaw = "";
-            this.inputMask = "";
-            this.dataValue = null;
+            this._inputRaw = "";
+            this._inputMask = "";
+            this._value = null;
         } else {
-            this.inputRaw = this.onlyNumbers(
-                this.limitNumbersLength(inputMask),
+            this._inputRaw = onlyNumbers(
+                limitNumbersLength(options.initialValue),
             );
-            this.inputMask = inputMask;
-            this.dataValue = this.dateBrazileanToDateOnly(inputMask);
+            this._inputMask = options.initialValue;
+            this._value = dateBrazileanToDateOnly(options.initialValue);
         }
     }
 
-    onlyNumbers(brazileanInputMask: string): string {
-        return brazileanInputMask.replace(/\D/g, "");
-    }
+    // getters & setters que sincronizam estado
+    update(rawInput: string) {
+        this._inputMask = applyBrazileanMask(this._inputRaw);
+        this._value = dateBrazileanToDateOnly(this._inputMask);
 
-    dateBrazileanToDateOnly(dateBrazilean: string) {
-        let parts: string[] = this.splitBrazileanMask(dateBrazilean);
-
-        if (parts.length != 3) {
-            return null;
+        if (this.onChange) {
+            this.onChange(this, this._value);
         }
-
-        const day: number = Number.parseInt(parts[0]);
-        const month: number = Number.parseInt(parts[1]) - 1;
-        const year: number = Number.parseInt(parts[2]);
-
-        if (year < 1000) {
-            return null;
-        }
-
-        return new DateOnly(year, month, day);
-    }
-    limitNumbersLength(inputRaw: string) {
-        return inputRaw.slice(0, 10);
     }
 
-    splitBrazileanMask(brazileanDate: string) {
-        return brazileanDate.split("/");
+    get value() {
+        return this._value;
+    }
+}
+
+function onlyNumbers(brazileanInputMask: string): string {
+    return brazileanInputMask.replace(/\D/g, "");
+}
+
+function limitNumbersLength(inputRaw: string) {
+    return inputRaw.slice(0, 10);
+}
+
+function splitBrazileanMask(brazileanDate: string) {
+    return brazileanDate.split("/");
+}
+
+function applyBrazileanMask(value: string): string {
+    const digits = limitNumbersLength(onlyNumbers(value));
+
+    if (digits.length <= 2) return digits;
+    if (digits.length < 5) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+
+    return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
+}
+
+function dateBrazileanToDateOnly(dateBrazilean: string): DateOnly | null {
+    let parts: string[] = splitBrazileanMask(dateBrazilean);
+
+    if (parts.length != 3) {
+        return null;
     }
 
-    applyBrazileanMask(value: string): string {
-        const digits = this.limitNumbersLength(this.onlyNumbers(value));
+    const day: number = Number.parseInt(parts[0]);
+    const month: number = Number.parseInt(parts[1]) - 1;
+    const year: number = Number.parseInt(parts[2]);
 
-        if (digits.length <= 2) return digits;
-        if (digits.length < 5)
-            return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-
-        return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
+    if (year < 1000) {
+        return null;
     }
 
-    update(): void {
-        this.inputMask = this.applyBrazileanMask(this.inputRaw);
-        this.dataValue = this.dateBrazileanToDateOnly(this.inputMask);
-        // Aqui em baixo vamos sincronizar os signals
-    }
+    return new DateOnly(year, month, day);
 }
 
 /*
