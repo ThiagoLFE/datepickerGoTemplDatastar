@@ -421,49 +421,96 @@ export class Datepicker {
 
 export class InputDate {
     _inputRaw: string;
-    _inputMask: string;
-    _value: DateOnly | null;
+    _inputMasked: string;
+    _dateValue: DateOnly | null;
 
     inputElement: HTMLInputElement;
     onChange: (self: InputDate, value: DateOnly | null) => any;
 
-    constructor(options?: {
+    constructor(options: {
         initialValue?: DateOnly;
         onChange?: (self: InputDate, value: DateOnly | null) => any;
-    }) {
-        options = options ?? {};
-        this.inputElement = target;
-        options.initialValue ??= DateOnly.now();
+    } = {}) {
+        this.onChange = options.onChange ?? defaultOnChange;
+        this.inputElement = document.createElement("input");
 
-        // Verificando se vai ser iniciado com valor ou nulo;
-        const parts = splitBrazileanMask(options.initialValue);
-
-        if (parts.length != 3) {
-            this._inputRaw = "";
-            this._inputMask = "";
-            this._value = null;
+        if (options.initialValue) {
+            const data = options.initialValue;
+            this._inputRaw = onlyNumbers(dataOnlyToBrazillianDate(data));
+            this._inputMasked = dataOnlyToBrazillianDate(data);
+            this._dateValue = data;
         } else {
-            this._inputRaw = onlyNumbers(
-                limitNumbersLength(options.initialValue),
-            );
-            this._inputMask = options.initialValue;
-            this._value = dateBrazileanToDateOnly(options.initialValue);
+            this._inputRaw = "";
+            this._inputMasked = "";
+            this._dateValue = null;
         }
+    }
+
+    get value(): DateOnly | null {
+        return this._dateValue;
+    }
+
+    get maskedValue(): string {
+        return this._inputMasked;
+    }
+
+    mount(target: string | HTMLElement): this {
+        const el =
+            typeof target === "string"
+                ? document.querySelector(target)
+                : target;
+
+        if (!(el instanceof HTMLInputElement)) {
+            throw new Error(`invalid mount target: ${el}`);
+        }
+
+        el.addEventListener("input", (evt) => {
+            if (!(evt instanceof InputEvent)) {
+                return;
+            }
+
+            if (evt.inputType === "deleteContentBackward") {
+                console.log(evt);
+                console.log("nao paguei em" + evt.type);
+                return;
+            }
+
+            const eventTarget = evt.target;
+
+            if (!(eventTarget instanceof HTMLInputElement)) {
+                return;
+            }
+
+            this._inputRaw = onlyNumbers(
+                limitNumbersLength(eventTarget.value),
+            );
+            this._inputMasked = applyBrazileanMask(this._inputRaw);
+            this.onChange(this, this.value);
+        });
+
+        el.addEventListener("change", () => {
+            this.onChange(this, this.value);
+        });
+
+        this.inputElement = el;
+        return this;
     }
 
     // getters & setters que sincronizam estado
-    update(rawInput: string) {
-        this._inputMask = applyBrazileanMask(this._inputRaw);
-        this._value = dateBrazileanToDateOnly(this._inputMask);
+    update(rawInput: string): void {
+        this._inputRaw = rawInput;
+        this._inputMasked = applyBrazileanMask(this._inputRaw);
+        this._dateValue = dateBrazileanToDateOnly(this._inputMasked);
 
         if (this.onChange) {
-            this.onChange(this, this._value);
+            this.onChange(this, this._dateValue);
         }
     }
+}
 
-    get value() {
-        return this._value;
-    }
+function defaultOnChange(self: InputDate, dateValue: DateOnly | null): void {
+    console.log(self);
+    console.log(dateValue);
 }
 
 function onlyNumbers(brazileanInputMask: string): string {
@@ -485,6 +532,10 @@ function applyBrazileanMask(value: string): string {
     if (digits.length < 5) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
 
     return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
+}
+
+function dataOnlyToBrazillianDate(date: DateOnly): string {
+    return `${date.day}/${date.month}/${date.year}`;
 }
 
 function dateBrazileanToDateOnly(dateBrazilean: string): DateOnly | null {
