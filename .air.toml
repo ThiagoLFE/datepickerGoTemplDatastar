@@ -8,11 +8,11 @@ tmp_dir = "tmp"
 [build]
   args_bin = []
   bin = "./tmp/main"
-  cmd = "templ generate; go build -o ./tmp/main ."
+  cmd = "go tool templ generate; tsc datepicker.ts; go build -o ./tmp/main ."
   delay = 1000
   entrypoint = ["./tmp/main"]
   exclude_dir = ["assets", "tmp", "vendor", "testdata"]
-  exclude_file = []
+  exclude_file = ["datepicker.js"]
   exclude_regex = ["_templ.go", "_test.go"]
   exclude_unchanged = false
   follow_symlink = false

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <title>Page Title</title>
+        <link rel="stylesheet" href="layout.css" />
+        <link rel="stylesheet" href="style.css" />
+
+        <script type="module" src="datastar.js"></script>
+        <script type="module" src="datepicker.js"></script>
+    </head>
+    <body>
+
+        <script type="module">
+            import { InputDate } from "./datepicker.js";
+            import { root } from "./datastar.js"
+
+            window.mainDatepicker = new InputDate().mount("#calendario");
+        </script>
+
+        <main>
+            <div id="calendario"></div>
+        </main>
+
+        <pre data-json-signals></pre>
+
+    </body>
+</html>
+
+<!--<
+    data-signals="{x: 20}"
+>
+
+<button
+    data-on:click="$x ++"
+    data-text="$x"
+>
+</button>-->
+
+<!--<input type="text"></input>-->

@@ -42,9 +42,11 @@ export class DateOnly {
     get year(): number {
         return this._date.getUTCFullYear();
     }
+
     get month(): number {
         return this._date.getUTCMonth();
     }
+
     get day(): number {
         return this._date.getUTCDate();
     }
@@ -75,6 +77,14 @@ export class DateOnly {
 
     dayOffset(): number {
         return new Date(Date.UTC(this.year, this.month, 1)).getUTCDay();
+    }
+
+    toString(): string {
+        try {
+            return this._date.toISOString();
+        } catch (err) {
+            return "<invalid date>";
+        }
     }
 }
 
@@ -197,7 +207,7 @@ export class Datepicker {
     }
 
     get endDateDisplay(): string {
-        if (!this.startDateValue) return "";
+        if (!this.endDateValue) return "";
         return this.toDisplay(this.endDateValue);
     }
 
@@ -419,91 +429,221 @@ export class Datepicker {
 
 // =========================== InputDate =================================
 
+
+function rawDateParts(s: string) {
+    return [s.slice(0, 2), s.slice(2, 4), s.slice(4)];
+}
+
+function dateParts(s: string) {
+    const parts = s
+        .split('/')
+        .map(x => x.replace(/^0+/, ''))
+        .map(x => parseInt(x, 10))
+    ;
+
+    return parts;
+}
+
+function applyMask(s: string): string {
+    if (s.length < 8) {
+        return s
+    } else if (s.length >= 8){
+        s = s.slice(0, 8);
+    }
+    return `${s.slice(0, 2)}/${s.slice(2, 4)}/${s.slice(4, 8)}`;
+}
+
+function removeMask(s: string): string {
+    return s.replaceAll("/", "");
+}
+
+function parseMaskedDate(s: string): DateOnly | null {
+    const [day, month, year] = dateParts(s);
+    console.log(day, month, year);
+
+    const date = new DateOnly(
+        year,
+        month - 1,
+        day,
+    );
+
+    return date;
+}
+
+function validateDate(s: string): boolean {
+    const [day, month, year] = dateParts(s);
+    if (month < 1 || month > 12) return false;
+    if (day < 1) return false;
+    const daysInMonth = new Date(year, month, 0).getDate();
+    return day <= daysInMonth;
+}
+
 export class InputDate {
-    _inputRaw: string;
-    _inputMasked: string;
-    _dateValue: DateOnly | null;
+    _value: DateOnly | null;
+    _element: HTMLDivElement;
+    onChange: ((self: this) => any);
 
-    inputElement: HTMLInputElement;
-    onChange: (self: InputDate, value: DateOnly | null) => any;
-
-    constructor(
-        options: {
-            initialValue?: DateOnly;
-            onChange?: (self: InputDate, value: DateOnly | null) => any;
-        } = {},
-    ) {
-        this.onChange = options.onChange ?? defaultOnChange;
-        this.inputElement = document.createElement("input");
-
-        if (options.initialValue) {
-            const data = options.initialValue;
-            this._inputRaw = onlyNumbers(dataOnlyToBrazillianDate(data));
-            this._inputMasked = dataOnlyToBrazillianDate(data);
-            this._dateValue = data;
-        } else {
-            this._inputRaw = "";
-            this._inputMasked = "";
-            this._dateValue = null;
+    constructor(onChange?: ((self: InputDate) => any) ) {
+        this._value = null;
+        this._element = document.createElement('div');
+        if (onChange) {
+            this.onChange = onChange;
+        }
+        else {
+        // TODO: REMOVE THIS SHIT
+            this.onChange = (self: this) => {
+                console.log(self);
+                console.log([self._element.querySelector('input')?.value, this._value?.toString()]);
+            };
         }
     }
 
-    set inputRaw(date: string) {
-        this._inputRaw = date;
-    }
-    get value(): DateOnly | null {
-        return this._dateValue;
+    render() {
+        this._element.innerHTML = "";
+        // TODO: id's
+        const input = document.createElement('input');
+        const errorMessage = document.createElement('span');
+
+        input.addEventListener('input', (evt) => {
+            errorMessage.innerText = ""
+
+            let val = (evt as any).target.value;
+            val  = onlyNumbers(val);
+            val  = applyMask(val);
+            input.value = val
+
+            if (validateDate(val)) {
+                this._value = parseMaskedDate(val);
+            }
+            else {
+                this._value = null;
+            }
+
+            this.onChange(this);
+
+        });
+
+        input.addEventListener(('change'), (evt) => {
+            let val = (evt as any).target.value;
+            val = onlyNumbers(val);
+            val = applyMask(val);
+            input.value = val
+
+            if (validateDate(val)) {
+                this._value = parseMaskedDate(val);
+            } else {
+                this._value = null;
+                errorMessage.innerText = "Data inválida";
+                errorMessage.style.color = "#ff0000";
+            }
+        });
+
+        this._element.appendChild(input);
+        this._element.appendChild(errorMessage);
     }
 
-    get maskedValue(): string {
-        return this._inputMasked;
-    }
-
-    mount(target: string | HTMLElement): this {
-        const el =
+    mount(target: string | HTMLDivElement) : this {
+        const el : HTMLDivElement | null =
             typeof target === "string"
                 ? document.querySelector(target)
                 : target;
 
-        if (!(el instanceof HTMLInputElement)) {
-            throw new Error(`invalid mount target: ${el}`);
+        if (!el) {
+            throw new Error(`Element not found: ${el}`);
         }
 
-        el.addEventListener("input", (evt) => {
-            if (!(evt instanceof InputEvent)) {
-                return;
-            }
-
-            const eventTarget = evt.target;
-
-            if (!(eventTarget instanceof HTMLInputElement)) {
-                return;
-            }
-
-            this._inputRaw = onlyNumbers(limitNumbersLength(eventTarget.value));
-            this._inputMasked = applyBrazileanMask(this._inputRaw);
-            this.onChange(this, this.value);
-        });
-
-        el.addEventListener("change", () => {
-            this.onChange(this, this.value);
-        });
-
-        this.inputElement = el;
+        this._element = el;
+        this.render();
         return this;
     }
 
-    // getters & setters que sincronizam estado
-    update(rawInput: string): void {
-        this._inputRaw = rawInput;
-        this._inputMasked = applyBrazileanMask(this._inputRaw);
-        this._dateValue = dateBrazileanToDateOnly(this._inputMasked);
-
-        if (this.onChange) {
-            this.onChange(this, this._dateValue);
-        }
-    }
 }
+
+// export class InputDate2 {
+//     _inputRaw: string;
+//     _inputMasked: string;
+//     _dateValue: DateOnly | null;
+
+//     inputElement: HTMLInputElement;
+//     onChange: (self: InputDate, value: DateOnly | null) => any;
+
+//     constructor(
+//         options: {
+//             initialValue?: DateOnly;
+//             onChange?: (self: InputDate, value: DateOnly | null) => any;
+//         } = {},
+//     ) {
+//         this.onChange = options.onChange ?? defaultOnChange;
+//         this.inputElement = document.createElement("input");
+
+//         if (options.initialValue) {
+//             const data = options.initialValue;
+//             this._inputRaw = onlyNumbers(dataOnlyToBrazillianDate(data));
+//             this._inputMasked = dataOnlyToBrazillianDate(data);
+//             this._dateValue = data;
+//         } else {
+//             this._inputRaw = "";
+//             this._inputMasked = "";
+//             this._dateValue = null;
+//         }
+//     }
+
+//     set inputRaw(date: string) {
+//         this._inputRaw = date;
+//     }
+//     get value(): DateOnly | null {
+//         return this._dateValue;
+//     }
+
+//     get maskedValue(): string {
+//         return this._inputMasked;
+//     }
+
+//     mount(target: string | HTMLElement): this {
+//         const el =
+//             typeof target === "string"
+//                 ? document.querySelector(target)
+//                 : target;
+
+//         if (!(el instanceof HTMLInputElement)) {
+//             throw new Error(`invalid mount target: ${el}`);
+//         }
+
+//         el.addEventListener("input", (evt) => {
+//             if (!(evt instanceof InputEvent)) {
+//                 return;
+//             }
+
+//             const eventTarget = evt.target;
+
+//             if (!(eventTarget instanceof HTMLInputElement)) {
+//                 return;
+//             }
+
+//             this._inputRaw = onlyNumbers(limitNumbersLength(eventTarget.value));
+//             this._inputMasked = applyBrazileanMask(this._inputRaw);
+//             this.onChange(this, this.value);
+//         });
+
+//         el.addEventListener("change", () => {
+//             this.onChange(this, this.value);
+//         });
+
+//         this.inputElement = el;
+//         return this;
+//     }
+
+//     // getters & setters que sincronizam estado
+//     update(rawInput: string): void {
+//         this._inputRaw = rawInput;
+//         this._inputMasked = applyBrazileanMask(this._inputRaw);
+//         this._dateValue = dateBrazileanToDateOnly(this._inputMasked);
+
+//         if (this.onChange) {
+//             this.onChange(this, this._dateValue);
+//         }
+//     }
+// }
 
 function defaultOnChange(self: InputDate, dateValue: DateOnly | null): void {
     console.log(self);
