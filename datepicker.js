@@ -1,10 +1,7 @@
 /* See end of file for copyright information */
 let weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 export function useWeekdayLabels(labels) {
-    assert(
-        labels.length == 7,
-        `Invalid number of week days: ${labels.length}. Should be 7`,
-    );
+    assert(labels.length == 7, `Invalid number of week days: ${labels.length}. Should be 7`);
     weekdayLabels = labels;
 }
 function assert(pred, msg) {
@@ -24,11 +21,7 @@ export class DateOnly {
         return DateOnly.fromDate(new Date());
     }
     static fromDate(d) {
-        return new DateOnly(
-            d.getUTCFullYear(),
-            d.getUTCMonth(),
-            d.getUTCDate(),
-        );
+        return new DateOnly(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
     }
     get year() {
         return this._date.getUTCFullYear();
@@ -67,11 +60,13 @@ export function toBrazileanDateFormat(date) {
 }
 export function brazileanToDateOnly(brazileanDate) {
     const parts = brazileanDate.split("/");
-    if (parts.length != 3) return null;
+    if (parts.length != 3)
+        return null;
     const day = Number.parseInt(parts[0]);
     const month = Number.parseInt(parts[1]) - 1;
     const year = Number.parseInt(parts[2]);
-    if (year < 1000) return null; // certificando os 4 digitos;
+    if (year < 1000)
+        return null; // certificando os 4 digitos;
     return new DateOnly(year, month, day);
 }
 export class Datepicker {
@@ -112,10 +107,13 @@ export class Datepicker {
     set startDate(v) {
         if (v) {
             let d = v;
-            if (this.minDate && d.before(this.minDate)) d = this.minDate;
-            if (this.maxDate && d.after(this.maxDate)) d = this.maxDate;
+            if (this.minDate && d.before(this.minDate))
+                d = this.minDate;
+            if (this.maxDate && d.after(this.maxDate))
+                d = this.maxDate;
             this.startDateValue = d;
-        } else {
+        }
+        else {
             this.startDateValue = null;
         }
         this._render();
@@ -126,45 +124,52 @@ export class Datepicker {
     set endDate(v) {
         if (v) {
             let d = v;
-            if (this.minDate && d.before(this.minDate)) d = this.minDate;
-            if (this.maxDate && d.after(this.maxDate)) d = this.maxDate;
+            if (this.minDate && d.before(this.minDate))
+                d = this.minDate;
+            if (this.maxDate && d.after(this.maxDate))
+                d = this.maxDate;
             this.endDateValue = d;
-        } else {
+        }
+        else {
             this.endDateValue = null;
         }
         this._render();
     }
     get startDateDisplay() {
-        if (!this.startDateValue) return "";
+        if (!this.startDateValue)
+            return "";
         return this.toDisplay(this.startDateValue);
     }
     get endDateDisplay() {
-        if (!this.endDateValue) return "";
+        if (!this.startDateValue)
+            return "";
         return this.toDisplay(this.endDateValue);
     }
     _handleClick(date) {
         if (this.ranged) {
-            if (
-                !this.startDateValue ||
-                (this.startDateValue && this.endDateValue)
-            ) {
+            if (!this.startDateValue ||
+                (this.startDateValue && this.endDateValue)) {
                 this.startDateValue = date;
                 this.endDateValue = null;
-            } else {
+            }
+            else {
                 if (date.before(this.startDateValue)) {
                     this.endDateValue = this.startDateValue;
                     this.startDateValue = date;
-                } else {
+                }
+                else {
                     this.endDateValue = date;
                 }
                 if (this.onSelect) {
                     this.onSelect(this, this.startDateValue, this.endDateValue);
                 }
             }
-        } else {
+        }
+        else {
             this.startDateValue = date;
             this.endDateValue = null;
-            if (this.onSelect) this.onSelect(this, this.startDateValue);
+            if (this.onSelect)
+                this.onSelect(this, this.startDateValue);
         }
         this._render();
     }
@@ -173,11 +178,13 @@ export class Datepicker {
     }
     static ISO8601ToDateOnly(dateISO8601) {
         const parts = dateISO8601.split("-");
-        if (parts.length != 3) return null;
+        if (parts.length != 3)
+            return null;
         const year = Number.parseInt(parts[0]);
         const month = Number.parseInt(parts[1]) - 1;
         const day = Number.parseInt(parts[2]);
-        if (year < 1000) return null; // certificando os 4 digitos;
+        if (year < 1000)
+            return null; // certificando os 4 digitos;
         return new DateOnly(year, month, day);
     }
     _prevMonth() {
@@ -216,37 +223,33 @@ export class Datepicker {
                 inCurrentMonth = false;
                 day = i - numDays + 1 - dayOffset;
                 value = new DateOnly(next.year, next.month, day);
-            } else if (day <= 0) {
+            }
+            else if (day <= 0) {
                 btn.setAttribute("disabled", "true");
                 inCurrentMonth = false;
                 day = prev.daysInMonth() - dayOffset + i + 1;
                 value = new DateOnly(prev.year, prev.month, day);
-            } else {
+            }
+            else {
                 value = new DateOnly(year, month, day);
             }
-            if (
-                (this.minDate && value.before(this.minDate)) ||
-                (this.maxDate && value.after(this.maxDate))
-            ) {
+            if ((this.minDate && value.before(this.minDate)) ||
+                (this.maxDate && value.after(this.maxDate))) {
                 btn.setAttribute("disabled", "true");
             }
             if (inCurrentMonth && this.startDate && this.endDate) {
-                if (
-                    value.equals(this.startDate) ||
-                    value.equals(this.endDate)
-                ) {
+                if (value.equals(this.startDate) ||
+                    value.equals(this.endDate)) {
                     btn.classList.add("datepicker-selected");
-                } else if (
-                    value.after(this.startDate) &&
-                    value.before(this.endDate)
-                ) {
+                }
+                else if (value.after(this.startDate) &&
+                    value.before(this.endDate)) {
                     btn.classList.add("datepicker-range");
                 }
-            } else if (
-                inCurrentMonth &&
+            }
+            else if (inCurrentMonth &&
                 this.startDate &&
-                value.equals(this.startDate)
-            ) {
+                value.equals(this.startDate)) {
                 btn.classList.add("datepicker-selected");
             }
             btn.addEventListener("click", (ev) => {
@@ -282,12 +285,11 @@ export class Datepicker {
             ev.preventDefault();
             this._nextMonth();
         });
-        const fmtMonth = (y, m) =>
-            new Date(Date.UTC(y, m, 1)).toLocaleString("default", {
-                month: "long",
-                year: "numeric",
-                timeZone: "UTC",
-            });
+        const fmtMonth = (y, m) => new Date(Date.UTC(y, m, 1)).toLocaleString("default", {
+            month: "long",
+            year: "numeric",
+            timeZone: "UTC",
+        });
         if (this.double) {
             const label1 = document.createElement("span");
             label1.innerText = fmtMonth(this.year, this.month);
@@ -297,7 +299,8 @@ export class Datepicker {
             header.appendChild(label1);
             header.appendChild(label2);
             header.appendChild(nextBtn);
-        } else {
+        }
+        else {
             const label = document.createElement("span");
             label.innerText = fmtMonth(this.year, this.month);
             header.appendChild(prevBtn);
@@ -312,15 +315,15 @@ export class Datepicker {
             months.appendChild(this._renderGrid(this.year, this.month));
             months.appendChild(this._renderGrid(nextYear, nextMonth));
             this.element.appendChild(months);
-        } else {
+        }
+        else {
             this.element.appendChild(this._renderGrid(this.year, this.month));
         }
     }
     mount(container) {
-        const el =
-            typeof container === "string"
-                ? document.querySelector(container)
-                : container;
+        const el = typeof container === "string"
+            ? document.querySelector(container)
+            : container;
         el.appendChild(this.element);
         return this;
     }
@@ -332,19 +335,23 @@ export class InputDate {
     _dateValue;
     inputElement;
     onChange;
-    constructor(options) {
+    constructor(options = {}) {
         this.onChange = options.onChange ?? defaultOnChange;
-        this.inputElement = document.createElement("input"); // Esse é substituido no mount();
-        if (options?.initialValue) {
+        this.inputElement = document.createElement("input");
+        if (options.initialValue) {
             const data = options.initialValue;
             this._inputRaw = onlyNumbers(dataOnlyToBrazillianDate(data));
             this._inputMasked = dataOnlyToBrazillianDate(data);
             this._dateValue = data;
-        } else {
+        }
+        else {
             this._inputRaw = "";
             this._inputMasked = "";
             this._dateValue = null;
         }
+    }
+    set inputRaw(date) {
+        this._inputRaw = date;
     }
     get value() {
         return this._dateValue;
@@ -353,20 +360,21 @@ export class InputDate {
         return this._inputMasked;
     }
     mount(target) {
-        const el =
-            typeof target === "string"
-                ? document.querySelector(target)
-                : target;
+        const el = typeof target === "string"
+            ? document.querySelector(target)
+            : target;
         if (!(el instanceof HTMLInputElement)) {
-            throw new Error("invalid mount target: ${el}");
+            throw new Error(`invalid mount target: ${el}`);
         }
         el.addEventListener("input", (evt) => {
-            if (evt.inputType === "deleteContentBackward") {
-                console.log(evt);
-                console.log("nao paguei em" + evt.type);
+            if (!(evt instanceof InputEvent)) {
                 return;
             }
-            this._inputRaw = onlyNumbers(limitNumbersLength(evt.target.value)); // TODO: Pede pro codex arrumar.
+            const eventTarget = evt.target;
+            if (!(eventTarget instanceof HTMLInputElement)) {
+                return;
+            }
+            this._inputRaw = onlyNumbers(limitNumbersLength(eventTarget.value));
             this._inputMasked = applyBrazileanMask(this._inputRaw);
             this.onChange(this, this.value);
         });
@@ -378,6 +386,7 @@ export class InputDate {
     }
     // getters & setters que sincronizam estado
     update(rawInput) {
+        this._inputRaw = rawInput;
         this._inputMasked = applyBrazileanMask(this._inputRaw);
         this._dateValue = dateBrazileanToDateOnly(this._inputMasked);
         if (this.onChange) {
@@ -400,8 +409,10 @@ function splitBrazileanMask(brazileanDate) {
 }
 function applyBrazileanMask(value) {
     const digits = limitNumbersLength(onlyNumbers(value));
-    if (digits.length <= 2) return digits;
-    if (digits.length < 5) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    if (digits.length <= 2)
+        return digits;
+    if (digits.length < 5)
+        return `${digits.slice(0, 2)}/${digits.slice(2)}`;
     return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
 }
 function dataOnlyToBrazillianDate(date) {

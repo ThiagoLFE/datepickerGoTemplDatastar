@@ -427,10 +427,12 @@ export class InputDate {
     inputElement: HTMLInputElement;
     onChange: (self: InputDate, value: DateOnly | null) => any;
 
-    constructor(options: {
-        initialValue?: DateOnly;
-        onChange?: (self: InputDate, value: DateOnly | null) => any;
-    } = {}) {
+    constructor(
+        options: {
+            initialValue?: DateOnly;
+            onChange?: (self: InputDate, value: DateOnly | null) => any;
+        } = {},
+    ) {
         this.onChange = options.onChange ?? defaultOnChange;
         this.inputElement = document.createElement("input");
 
@@ -446,6 +448,9 @@ export class InputDate {
         }
     }
 
+    set inputRaw(date: string) {
+        this._inputRaw = date;
+    }
     get value(): DateOnly | null {
         return this._dateValue;
     }
@@ -469,21 +474,13 @@ export class InputDate {
                 return;
             }
 
-            if (evt.inputType === "deleteContentBackward") {
-                console.log(evt);
-                console.log("nao paguei em" + evt.type);
-                return;
-            }
-
             const eventTarget = evt.target;
 
             if (!(eventTarget instanceof HTMLInputElement)) {
                 return;
             }
 
-            this._inputRaw = onlyNumbers(
-                limitNumbersLength(eventTarget.value),
-            );
+            this._inputRaw = onlyNumbers(limitNumbersLength(eventTarget.value));
             this._inputMasked = applyBrazileanMask(this._inputRaw);
             this.onChange(this, this.value);
         });

@@ -20,7 +20,9 @@ export function createInputDate(id, initialValue) {
         target,
         initialValue,
         onChange: (self, val) => {
+            self.inputRaw = root.inputdates[id].input_value;
             root.inputdates[id].input_value = self.maskedValue;
+
             console.log(self);
             console.log(val);
         },
